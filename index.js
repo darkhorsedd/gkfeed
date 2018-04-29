@@ -2,15 +2,17 @@ const rp = require('request-promise');
 const xml2js = require('xml2js');
 const express = require('express');
 const dateFormat = require('dateformat');
+const feedparser = require('feedparser-promised');
 const app = express();
 
-const RSS_URL = 'http://www.animenewsnetwork.com/all/rss.xml';
+const RSS_URL = 'http://176.31.110.217/gk/index.php';
 const RSS_POLL_TIMEOUT = 15 * 60 * 1000
 let dataCache = {};
 
 app.set('port', process.env.PORT || 3000);
 
 app.get('/', (appReq, appRes) => {
+  appRes.setHeader('Content-Type', 'application/json');
   appRes.json(dataCache);
 });
 
@@ -19,27 +21,12 @@ app.listen(app.get('port'), function() {
 });
 
 function updateDataCache() {
-  rp(RSS_URL)
-    .then(rssRes =>
-      xml2js.parseString(rssRes, (err, rssJSON) => {
-        let alexaNewsItems = [];
-
-        rssJSON.rss.channel[0].item.forEach(item => {
-          const itemDate = new Date(item.pubDate[0]);
-
-          alexaNewsItems.push({
-            uid: item.guid[0]._,
-            updateDate: dateFormat(itemDate, `UTC:yyyy-mm-dd'T'HH:MM:ss'.0Z'`),
-            titleText: item.title[0],
-            mainText: item.description[0],
-            redirectionURL: item.link[0]
-          });
-        });
-        dataCache = alexaNewsItems;
-      })
-    )
-    .catch(err => {
-      console.error(err);
+rp(RSS_URL)
+    .then(function (htmlString) {
+        dataCache=JSON.parse(htmlString);
+    })
+    .catch(function (err) {
+        // Crawling failed...
     });
 }
 
