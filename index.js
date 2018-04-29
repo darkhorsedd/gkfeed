@@ -12,7 +12,8 @@ let dataCache = {};
 app.set('port', process.env.PORT || 3000);
 
 app.get('/', (appReq, appRes) => {
-  appRes.setHeader('Content-Type', 'application/json;charset=UTF-8');
+  appRes.setHeader('charset', 'utf-8')	
+  appRes.setHeader('Content-Type', 'application/json');
   
   appRes.json(dataCache);
 });
